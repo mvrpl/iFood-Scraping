@@ -10,7 +10,7 @@ const crawler = new PuppeteerCrawler({
     headless: true
 });
 
-global.dtNow = moment.utc(moment.tz('America/Sao_Paulo').format('YYYY-MM-DDTHH:mm:ss')).toDate();
+global.dtNow = moment().tz('America/Sao_Paulo').format();
 
 const mongoURI = argv[2];
 const mercadoID = parseInt(argv[3]) || null;
