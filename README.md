@@ -30,47 +30,61 @@ npm start <str:MONGODB_URI_CONN> <int:ID_MERCADO:optional>
 
 P.S.: Get products of all `mercados` collection if not passed argument ID_MERCADO.
 
-### To analyze prices of same product in all markets:
+### To analyze prices of same product in all markets (aggregate framework):
 ```js
-db.getCollection("produtos").aggregate([
-    {
-        $replaceRoot: {
-            newRoot: {
-                'nome': "$nome",
-                'id_mercado': "$id_mercado",
-                'preco': "$preco",
-            }
-        }
-    },
-    {
-        $group: { _id: { nome: "$nome", id_mercado: "$id_mercado" }, "preco": { $max: "$preco" } }
-    },
-    {
-        $lookup:
-            {
-                from: "mercados",
-                localField: "_id.id_mercado",
-                foreignField: "id",
-                as: "mercado"
-            }
-    },
-    {
-        $replaceRoot: {
-            newRoot: {
-                "_id": ObjectId(),
-                'nome': '$_id.nome',
-                'cidade_mercado': { $arrayElemAt: ["$mercado.cidade", 0] },
-                'bairro_mercado': { $arrayElemAt: ["$mercado.bairro", 0] },
-                'nome_mercado': { $arrayElemAt: ["$mercado.nome", 0] },
-                'preco': '$preco',
-            }
-        }
-    },
-    {
-        $match: {
-            //nome: /.*Óleo de Soja Soya 900ml.*/
-            nome: /.*Arroz Branco Tio João 1kg.*/
-        }
-    }
-]);
+[
+  {
+    $group:
+      {
+        _id: {
+          nome: "$nome",
+          id_mercado: "$id_mercado",
+        },
+        preco: {
+          $max: "$preco",
+        },
+      },
+  },
+  {
+    $lookup:
+      {
+        from: "mercados",
+        localField: "_id.id_mercado",
+        foreignField: "id",
+        as: "mercado",
+      },
+  },
+  {
+    $replaceRoot:
+      {
+        newRoot: {
+          _id: ObjectId(),
+          nome: "$_id.nome",
+          cidade_mercado: {
+            $arrayElemAt: ["$mercado.cidade", 0],
+          },
+          bairro_mercado: {
+            $arrayElemAt: ["$mercado.bairro", 0],
+          },
+          nome_mercado: {
+            $arrayElemAt: ["$mercado.nome", 0],
+          },
+          preco: "$preco",
+        },
+      },
+  },
+  {
+    $match:
+      {
+        //nome: /.*Óleo de Soja Soya 900ml.*/
+        nome: /.*Feijao Carioca Vapza 500g.*/,
+      },
+  },
+  {
+    $sort:
+      {
+        preco: 1,
+      },
+  },
+]
 ```
