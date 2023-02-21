@@ -98,6 +98,7 @@ pipeline = [
         "$replaceRoot": {
             "newRoot": {
                 "nome": "$_id.nome",
+                "data_captura": "$data_captura",
                 "cidade_mercado": {
                     "$arrayElemAt": ["$mercado.cidade", 0],
                 },
@@ -131,6 +132,8 @@ df["mercado_cidade"] = (
     df["nome_mercado"] + " - " + df["cidade_mercado"] + " - " + df["bairro_mercado"]
 )
 
+df['data_captura'] = pd.to_datetime(df['data_captura']).dt.strftime('%d/%m/%Y %H:%M:%S')
+
 fig = px.bar(
     df,
     x="mercado_cidade",
@@ -140,7 +143,9 @@ fig = px.bar(
         "mercado_cidade": "Mercado",
         "nome": "Produto",
         "preco": "Preço",
+        "data_captura": "Data Captura"
     },
+    hover_data=["data_captura"],
     title="Preços por mercados",
     barmode="group",
     height=800,
@@ -221,7 +226,7 @@ df = pd.DataFrame(list(result))
 df = df.query("id_mercado == 1") # Change ID of market to analysis.
 
 df['preco_ant'] = df['preco'].shift()
-df['preco_diff'] = (df['preco'] - df['preco'].shift()).map('{:,.2f}'.format, na_action='ignore')
+df['preco_diff'] = (df['preco'] - df['preco'].shift()).map('{:+,.2f}'.format, na_action='ignore')
 df['preco_percent'] = ((abs(df['preco'] - df['preco'].shift()) / df['preco'].shift()) * 100.0).map('{:,.2f}'.format, na_action='ignore')
 
 data_mercado = df.iloc[0].to_dict()
@@ -248,7 +253,7 @@ fig.update_traces(
     hovertemplate="<br>".join([
         "Data captura: %{x}",
         "Preço: %{y}",
-        "Mudança preço: R$ %{customdata[1]} (%{customdata[3]})",
+        "Mudança preço: R$ %{customdata[1]} (Antes: R$ %{customdata[3]})",
         "Porcentagem de mudança preço: %{customdata[2]}%"
     ])
 )
@@ -273,8 +278,11 @@ fig.update_layout(
                         }
                     ],
                 }
-                for m in ["Selecione o produto..."] + list(map(lambda d: d.name, fig.data))
-            ]
+                for m in ["Selecione o produto..."] + sorted(list(map(lambda d: d.name, fig.data)))
+            ],
+            'type':'dropdown',
+            "direction": "down",
+            "showactive": True
         }
     ]
 )
