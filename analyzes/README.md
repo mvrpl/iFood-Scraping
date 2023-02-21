@@ -4,7 +4,7 @@
 
 ![Analysis 01](https://github.com/mvrpl/iFood-Scraping/blob/main/analyzes/TabelaProdutosMultiMercados.png?raw=true)
 
-```ipython
+```python
 import pymongo
 import pandas as pd
 from itables import show
@@ -46,7 +46,7 @@ show(df)
 
 ![Analysis 02](https://github.com/mvrpl/iFood-Scraping/blob/main/analyzes/PreçosProdutosPorMercados.png?raw=true)
 
-```ipython
+```python
 import pandas as pd
 from bson.regex import Regex
 import plotly.express as px
@@ -154,7 +154,7 @@ fig.show()
 
 ![Analysis 03](https://github.com/mvrpl/iFood-Scraping/blob/main/analyzes/TimelinePreçosProdutosPorMercado.png?raw=true)
 
-```ipython
+```python
 import pymongo
 import pandas as pd
 import plotly.express as px
