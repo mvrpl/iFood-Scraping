@@ -54,5 +54,7 @@ router.addDefaultHandler(async ({ request, page, log }) => {
     const database = clientDB.db("ifood");
     const produtos = database.collection("produtos");
 
-    produtos.insertMany(dataProdutos);
+    if (dataProdutos.length > 0) {
+        produtos.insertMany(dataProdutos);
+    }
 });
