@@ -21,6 +21,12 @@ async function scrollDown(page) {
     }
 }
 
+function getPromiseData(el, selector) {
+    return el.$eval(selector, el => el.textContent).then(function(result) {
+        return result;
+    });
+}
+
 router.addDefaultHandler(async ({ request, page, log }) => {
     await page.waitForXPath('//*[@id="__next"]/div[1]/main[1]/section[1]/aside[1]/nav[1]/ul[1]/li');
 
@@ -33,23 +39,22 @@ router.addDefaultHandler(async ({ request, page, log }) => {
     ]);
 
     await scrollDown(page);
-    
-    const dataProdutos = await page.evaluate((idMercado, data) => {
-        const prods = Array.from(document.querySelectorAll('div#__next > div > main > section > main > div:nth-of-type(2) > section > div'));
-        return prods.map(td => {
-            const nomeProduto = td.querySelector('a > span').textContent.replace("'", "");
-            var precoProduto = td.querySelector('a > div.product-card__price').textContent;
-            precoProduto = RegExp('R\\$ ([0-9\\.]+,[0-9]+)').exec(precoProduto);
-            precoProduto = precoProduto ? precoProduto[1].replace(".", "").replace(",", ".") : "0.0";
-            
-            return {
-                id_mercado: idMercado,
-                nome: nomeProduto,
-                preco: parseFloat(precoProduto),
-                data_captura: data
-            };
-        });
-    }, mercados.get(url), dtNow);
+
+    const dataProdutosXPath = await page.$x("/html/body/div[2]/div[1]/main/section/main/div[3]/section/div");
+
+    const dataProdutos = await Promise.all(dataProdutosXPath.map(async (e) => {
+        var precoProduto = await getPromiseData(e, "a.product-card-content > div.product-card__price");
+        const nomeProduto = await getPromiseData(e, "a.product-card-content > span.product-card__description");
+
+        precoProduto = RegExp('R\\$ ([0-9\\.]+,[0-9]+)').exec(precoProduto);
+        precoProduto = precoProduto ? precoProduto[1].replace(".", "").replace(",", ".") : "0.0";
+        return {
+            id_mercado: mercados.get(url),
+            nome: nomeProduto,
+            preco: parseFloat(precoProduto),
+            data_captura: dtNow
+        }
+    }));
 
     const database = clientDB.db("ifood");
     const produtos = database.collection("produtos");
